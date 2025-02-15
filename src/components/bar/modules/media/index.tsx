@@ -68,7 +68,9 @@ const Media = (): BarBoxChild => {
                 componentClassName.drop();
             }}
         >
+            {/* Two levels of "|| '󰝚'", kinda annoying...
             <label className={'bar-button-icon media txt-icon bar'} label={bind(songIcon).as((icn) => icn || '󰝚')} />
+            */}
             <label className={'bar-button-label media'} label={mediaLabel()} />
         </box>
     );
