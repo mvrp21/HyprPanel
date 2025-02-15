@@ -14,6 +14,7 @@ import { Variable } from 'astal';
  * @returns The icon for the media player as a string.
  */
 const getIconForPlayer = (playerName: string): string => {
+    /* Removing this, looks annoying
     const windowTitleMap = [
         ['Firefox', '󰈹'],
         ['Microsoft Edge', '󰇩'],
@@ -34,10 +35,10 @@ const getIconForPlayer = (playerName: string): string => {
         ['Floorp', '󰈹'],
         ['(.*)', '󰝚'],
     ];
-
     const foundMatch = windowTitleMap.find((wt) => RegExp(wt[0], 'i').test(playerName));
-
-    return foundMatch ? foundMatch[1] : '󰝚';
+    return foundMatch ? foundMatch[1] : '󰝚'; */
+    // TODO: make configuration to enable/disable and custom mappings for apps
+    return '';
 };
 
 /**
