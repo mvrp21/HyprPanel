@@ -84,7 +84,8 @@ export const generateMediaLabel = (
 
     if (!currentPlayer || !show_label.get()) {
         songIcon.set(getIconForPlayer(activePlayer.get()?.identity || ''));
-        return `Media`;
+        // return `Media`; ???????????????
+        return '';
     }
 
     const { title, identity, artist, album, busName } = currentPlayer;
@@ -121,5 +122,6 @@ export const generateMediaLabel = (
         mediaLabel = `${truncatedLabel.substring(0, maxLabelSize)}...`;
     }
 
-    return mediaLabel.length ? mediaLabel : 'Media';
+    // return mediaLabel.length ? mediaLabel : 'Media'; wtf? why??
+    return mediaLabel;
 };

@@ -16,15 +16,20 @@ mprisService.connect('player-closed', (_, closedPlayer) => {
     }
 
     if (closedPlayer.busName === activePlayer.get()?.busName) {
-        const nextPlayer = mprisService.get_players().find((player) => player.busName !== closedPlayer.busName);
+        const nextPlayer = mprisService.get_players().find((player) => {
+          const isAnotherPlayer = player.busName !== closedPlayer.busName
+          const isPlaying = player.get_playback_status() === AstalMpris.PlaybackStatus.PLAYING;
+          return isAnotherPlayer && isPlaying;
+        });
         activePlayer.set(nextPlayer);
     }
 });
 
 mprisService.connect('player-added', (_, addedPlayer) => {
-    if (activePlayer.get() === undefined) {
+    if (activePlayer.get() === undefined && addedPlayer.get_playback_status() === AstalMpris.PlaybackStatus.PLAYING) {
         activePlayer.set(addedPlayer);
     }
+
 });
 
 export const timeStamp = Variable('00:00');
@@ -150,6 +155,22 @@ const updateCanPlay = (player: AstalMpris.Player | undefined): void => {
     canPlay.set(initialCanPlay);
 };
 
+let intervalId: ReturnType<typeof setInterval> | null = null;
+
+const lookForAnActivePlayer = () => {
+  if (intervalId !== null)
+    return;
+  intervalId = setInterval(() => {
+      // pooling players to find one that is actually playing
+      for (const player of mprisService.get_players())
+        if (player.get_playback_status() === AstalMpris.PlaybackStatus.PLAYING) {
+          clearInterval(intervalId);
+          intervalId = null;
+          return activePlayer.set(player);
+        }
+  }, 300);
+}
+
 const updatePlaybackStatus = (player: AstalMpris.Player | undefined): void => {
     playbackStatusUnsub?.drop();
     playbackStatusUnsub = undefined;
@@ -163,6 +184,13 @@ const updatePlaybackStatus = (player: AstalMpris.Player | undefined): void => {
 
     playbackStatusUnsub = Variable.derive([playbackStatusBinding], (status) => {
         playbackStatus.set(status ?? AstalMpris.PlaybackStatus.STOPPED);
+        if (status === AstalMpris.PlaybackStatus.PLAYING)
+          return;
+        // player is not active anymore
+        if (activePlayer.get() !== undefined) {
+          lookForAnActivePlayer();
+          activePlayer.set(undefined);
+        }
     });
 
     const initialStatus = playbackStatus.get();
@@ -223,7 +251,6 @@ const updateTitle = (player: AstalMpris.Player | undefined): void => {
         if (pbStatus === AstalMpris.PlaybackStatus.STOPPED) {
             return mediaTitle.set(noMediaText.get() ?? '-----');
         }
-
         mediaTitle.set(newTitle.length > 0 ? newTitle : '-----');
     });
 
